@@ -235,6 +235,7 @@ def _select_provider_and_model(mode: str, default_provider: str) -> Tuple[str, s
         ("GLM", "glm", "https://open.bigmodel.cn/api/paas/v4/"),
         ("OpenRouter", "openrouter", "https://openrouter.ai/api/v1"),
         ("Moonshot (Kimi)", "moonshot", "https://api.moonshot.cn/v1"),
+        ("Xinghu API (Proxy)", "xinghuapi", "https://xinghuapi.com/v1"),
         ("Azure OpenAI", "azure", None),
         ("Ollama", "ollama", "http://localhost:11434/v1"),
     ]
@@ -292,6 +293,7 @@ def select_llm_provider() -> tuple[str, str | None]:
         ("GLM", "glm", "https://open.bigmodel.cn/api/paas/v4/"),
         ("OpenRouter", "openrouter", "https://openrouter.ai/api/v1"),
         ("Moonshot (Kimi)", "moonshot", "https://api.moonshot.cn/v1"),
+        ("Xinghu API (Proxy)", "xinghuapi", "https://xinghuapi.com/v1"),
         ("Azure OpenAI", "azure", None),
         ("Ollama", "ollama", "http://localhost:11434/v1"),
     ]

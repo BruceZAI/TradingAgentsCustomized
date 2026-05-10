@@ -115,6 +115,20 @@ MODEL_OPTIONS: ProviderModeOptions = {
             ("Custom model ID", "custom"),
         ],
     },
+    "xinghuapi": {
+        "quick": [
+            ("Claude Sonnet 4.6 - Best speed and intelligence balance", "claude-sonnet-4-6"),
+            ("Claude Opus 4.7 - Most capable", "claude-opus-4-7"),
+            ("Claude Opus 4.6 - Agents and coding", "claude-opus-4-6"),
+            ("Custom model ID", "custom"),
+        ],
+        "deep": [
+            ("Claude Opus 4.7 - Most capable", "claude-opus-4-7"),
+            ("Claude Opus 4.6 - Agents and coding", "claude-opus-4-6"),
+            ("Claude Sonnet 4.6 - Best speed and intelligence balance", "claude-sonnet-4-6"),
+            ("Custom model ID", "custom"),
+        ],
+    },
     # OpenRouter: fetched dynamically. Azure: any deployed model name.
     "ollama": {
         "quick": [
