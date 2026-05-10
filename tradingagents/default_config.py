@@ -11,20 +11,23 @@ DEFAULT_CONFIG = {
     # the oldest resolved entries are pruned once this limit is exceeded.
     # Pending entries are never pruned. None disables rotation entirely.
     "memory_log_max_entries": None,
-    # LLM settings
+    # LLM settings — each role has its own provider + model + endpoint.
+    # Legacy "llm_provider" / "backend_url" kept for backward-compat but
+    # trading_graph.py prefers the per-role keys below.
     "llm_provider": "openai",
     "deep_think_llm": "gpt-5.4",
     "quick_think_llm": "gpt-5.4-mini",
-    # When None, each provider's client falls back to its own default endpoint
-    # (api.openai.com for OpenAI, generativelanguage.googleapis.com for Gemini, ...).
-    # The CLI overrides this per provider when the user picks one. Keeping a
-    # provider-specific URL here would leak (e.g. OpenAI's /v1 was previously
-    # being forwarded to Gemini, producing malformed request URLs).
     "backend_url": None,
+    # Per-role provider overrides (take precedence over the shared keys above)
+    "deep_think_provider": None,   # e.g. "openai", "moonshot", "deepseek"
+    "quick_think_provider": None,  # e.g. "openai", "moonshot", "deepseek"
+    "deep_think_backend_url": None,
+    "quick_think_backend_url": None,
     # Provider-specific thinking configuration
     "google_thinking_level": None,      # "high", "minimal", etc.
     "openai_reasoning_effort": None,    # "medium", "high", "low"
     "anthropic_effort": None,           # "high", "medium", "low"
+    "moonshot_thinking_enabled": True,  # True = enable thinking, False = disable
     # Checkpoint/resume: when True, LangGraph saves state after each node
     # so a crashed run can resume from the last successful step.
     "checkpoint_enabled": False,

@@ -103,6 +103,28 @@ class DeepSeekChatOpenAI(NormalizedChatOpenAI):
             )
         return super().with_structured_output(schema, method=method, **kwargs)
 
+_MOONSHOT_THINKING_MODELS = {"kimi-k2.6", "kimi-k2.5"}
+
+
+class MoonshotChatOpenAI(NormalizedChatOpenAI):
+    """Moonshot-specific override that injects the thinking control parameter.
+
+    kimi-k2.6 and kimi-k2.5 support an ``extra_body`` thinking field:
+      {"type": "enabled"} (default) or {"type": "disabled"}.
+    Only these models accept the parameter; older moonshot-v1-* models ignore
+    extra_body cleanly, but we only inject it for models that need it.
+    """
+
+    thinking_enabled: bool = True
+
+    def _get_request_payload(self, input_, *, stop=None, **kwargs):
+        payload = super()._get_request_payload(input_, stop=stop, **kwargs)
+        if self.model_name in _MOONSHOT_THINKING_MODELS:
+            thinking_type = "enabled" if self.thinking_enabled else "disabled"
+            payload.setdefault("thinking", {"type": thinking_type})
+        return payload
+
+
 # Kwargs forwarded from user config to ChatOpenAI
 _PASSTHROUGH_KWARGS = (
     "timeout", "max_retries", "reasoning_effort",
@@ -117,6 +139,7 @@ _PROVIDER_CONFIG = {
     "glm": ("https://api.z.ai/api/paas/v4/", "ZHIPU_API_KEY"),
     "openrouter": ("https://openrouter.ai/api/v1", "OPENROUTER_API_KEY"),
     "ollama": ("http://localhost:11434/v1", None),
+    "moonshot": ("https://api.moonshot.cn/v1", "MOONSHOT_API_KEY"),
 }
 
 
@@ -169,10 +192,14 @@ class OpenAIClient(BaseLLMClient):
         if self.provider == "openai":
             llm_kwargs["use_responses_api"] = True
 
-        # DeepSeek's thinking-mode quirks live in their own subclass so the
-        # base NormalizedChatOpenAI stays free of provider-specific branches.
-        chat_cls = DeepSeekChatOpenAI if self.provider == "deepseek" else NormalizedChatOpenAI
-        return chat_cls(**llm_kwargs)
+        if self.provider == "deepseek":
+            return DeepSeekChatOpenAI(**llm_kwargs)
+
+        if self.provider == "moonshot":
+            thinking_enabled = self.kwargs.get("moonshot_thinking_enabled", True)
+            return MoonshotChatOpenAI(thinking_enabled=thinking_enabled, **llm_kwargs)
+
+        return NormalizedChatOpenAI(**llm_kwargs)
 
     def validate_model(self) -> bool:
         """Validate model for the provider."""

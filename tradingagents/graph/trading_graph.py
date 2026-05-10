@@ -76,24 +76,37 @@ class TradingAgentsGraph:
         os.makedirs(self.config["data_cache_dir"], exist_ok=True)
         os.makedirs(self.config["results_dir"], exist_ok=True)
 
-        # Initialize LLMs with provider-specific thinking configuration
-        llm_kwargs = self._get_provider_kwargs()
+        # Resolve per-role providers (fall back to shared llm_provider)
+        shared_provider = self.config.get("llm_provider", "openai")
+        deep_provider = self.config.get("deep_think_provider") or shared_provider
+        quick_provider = self.config.get("quick_think_provider") or shared_provider
 
-        # Add callbacks to kwargs if provided (passed to LLM constructor)
+        shared_url = self.config.get("backend_url")
+        deep_url = self.config.get("deep_think_backend_url") or (
+            shared_url if deep_provider == shared_provider else None
+        )
+        quick_url = self.config.get("quick_think_backend_url") or (
+            shared_url if quick_provider == shared_provider else None
+        )
+
+        deep_kwargs = self._get_provider_kwargs(deep_provider)
+        quick_kwargs = self._get_provider_kwargs(quick_provider)
+
         if self.callbacks:
-            llm_kwargs["callbacks"] = self.callbacks
+            deep_kwargs["callbacks"] = self.callbacks
+            quick_kwargs["callbacks"] = self.callbacks
 
         deep_client = create_llm_client(
-            provider=self.config["llm_provider"],
+            provider=deep_provider,
             model=self.config["deep_think_llm"],
-            base_url=self.config.get("backend_url"),
-            **llm_kwargs,
+            base_url=deep_url,
+            **deep_kwargs,
         )
         quick_client = create_llm_client(
-            provider=self.config["llm_provider"],
+            provider=quick_provider,
             model=self.config["quick_think_llm"],
-            base_url=self.config.get("backend_url"),
-            **llm_kwargs,
+            base_url=quick_url,
+            **quick_kwargs,
         )
 
         self.deep_thinking_llm = deep_client.get_llm()
@@ -130,25 +143,28 @@ class TradingAgentsGraph:
         self.graph = self.workflow.compile()
         self._checkpointer_ctx = None
 
-    def _get_provider_kwargs(self) -> Dict[str, Any]:
+    def _get_provider_kwargs(self, provider: str) -> Dict[str, Any]:
         """Get provider-specific kwargs for LLM client creation."""
         kwargs = {}
-        provider = self.config.get("llm_provider", "").lower()
+        p = provider.lower()
 
-        if provider == "google":
+        if p == "google":
             thinking_level = self.config.get("google_thinking_level")
             if thinking_level:
                 kwargs["thinking_level"] = thinking_level
 
-        elif provider == "openai":
+        elif p == "openai":
             reasoning_effort = self.config.get("openai_reasoning_effort")
             if reasoning_effort:
                 kwargs["reasoning_effort"] = reasoning_effort
 
-        elif provider == "anthropic":
+        elif p == "anthropic":
             effort = self.config.get("anthropic_effort")
             if effort:
                 kwargs["effort"] = effort
+
+        elif p == "moonshot":
+            kwargs["moonshot_thinking_enabled"] = self.config.get("moonshot_thinking_enabled", True)
 
         return kwargs
 
