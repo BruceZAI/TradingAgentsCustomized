@@ -168,6 +168,20 @@ MODEL_OPTIONS: ProviderModeOptions = {
             ("Custom model ID", "custom"),
         ],
     },
+    "moonshot": {
+        "quick": [
+            ("Kimi k2 - Latest flagship model", "kimi-k2"),
+            ("Moonshot v1 8k - Fast, short context", "moonshot-v1-8k"),
+            ("Moonshot v1 32k - Balanced", "moonshot-v1-32k"),
+            ("Custom model ID", "custom"),
+        ],
+        "deep": [
+            ("Kimi k2 - Latest flagship model", "kimi-k2"),
+            ("Moonshot v1 128k - Long context, deep analysis", "moonshot-v1-128k"),
+            ("Moonshot v1 32k - Balanced", "moonshot-v1-32k"),
+            ("Custom model ID", "custom"),
+        ],
+    },
     # OpenRouter: fetched dynamically. Azure: any deployed model name.
     # Ollama display labels intentionally omit a "local" marker — the
     # endpoint is now configurable via OLLAMA_BASE_URL, so the same labels
