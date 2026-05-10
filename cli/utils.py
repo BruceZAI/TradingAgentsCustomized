@@ -219,14 +219,65 @@ def _select_model(provider: str, mode: str) -> str:
     return choice
 
 
-def select_shallow_thinking_agent(provider) -> str:
-    """Select shallow thinking llm engine using an interactive selection."""
-    return _select_model(provider, "quick")
+def _select_provider_and_model(mode: str, default_provider: str) -> Tuple[str, str, Optional[str]]:
+    """Let the user pick a provider (defaulting to default_provider) then a model.
+
+    Returns (provider_key, model_id, backend_url).
+    """
+    # (display_name, provider_key, base_url)
+    PROVIDERS = [
+        ("OpenAI", "openai", "https://api.openai.com/v1"),
+        ("Google", "google", None),
+        ("Anthropic", "anthropic", "https://api.anthropic.com/"),
+        ("xAI", "xai", "https://api.x.ai/v1"),
+        ("DeepSeek", "deepseek", "https://api.deepseek.com"),
+        ("Qwen", "qwen", "https://dashscope.aliyuncs.com/compatible-mode/v1"),
+        ("GLM", "glm", "https://open.bigmodel.cn/api/paas/v4/"),
+        ("OpenRouter", "openrouter", "https://openrouter.ai/api/v1"),
+        ("Moonshot (Kimi)", "moonshot", "https://api.moonshot.cn/v1"),
+        ("Azure OpenAI", "azure", None),
+        ("Ollama", "ollama", "http://localhost:11434/v1"),
+    ]
+
+    choices = []
+    for display, key, url in PROVIDERS:
+        label = f"{display} (same as Quick)" if default_provider and key == default_provider else display
+        choices.append(questionary.Choice(label, value=(key, url)))
+
+    provider_choice = questionary.select(
+        f"Select Provider for [{mode.title()}-Thinking LLM]:",
+        choices=choices,
+        instruction="\n- Use arrow keys to navigate\n- Press Enter to select",
+        style=questionary.Style([
+            ("selected", "fg:magenta noinherit"),
+            ("highlighted", "fg:magenta noinherit"),
+            ("pointer", "fg:magenta noinherit"),
+        ]),
+    ).ask()
+
+    if provider_choice is None:
+        console.print(f"\n[red]No provider selected. Exiting...[/red]")
+        exit(1)
+
+    provider_key, backend_url = provider_choice
+    model = _select_model(provider_key, mode)
+    return provider_key, model, backend_url
 
 
-def select_deep_thinking_agent(provider) -> str:
-    """Select deep thinking llm engine using an interactive selection."""
-    return _select_model(provider, "deep")
+def select_shallow_thinking_agent(provider) -> Tuple[str, str, Optional[str]]:
+    """Select provider + model for the quick-thinking role.
+
+    Returns (provider_key, model_id, backend_url).
+    """
+    return _select_provider_and_model("quick", provider)
+
+
+def select_deep_thinking_agent(provider) -> Tuple[str, str, Optional[str]]:
+    """Select provider + model for the deep-thinking role.
+
+    Returns (provider_key, model_id, backend_url).
+    """
+    return _select_provider_and_model("deep", provider)
 
 def select_llm_provider() -> tuple[str, str | None]:
     """Select the LLM provider and its API endpoint."""
@@ -240,6 +291,7 @@ def select_llm_provider() -> tuple[str, str | None]:
         ("Qwen", "qwen", "https://dashscope.aliyuncs.com/compatible-mode/v1"),
         ("GLM", "glm", "https://open.bigmodel.cn/api/paas/v4/"),
         ("OpenRouter", "openrouter", "https://openrouter.ai/api/v1"),
+        ("Moonshot (Kimi)", "moonshot", "https://api.moonshot.cn/v1"),
         ("Azure OpenAI", "azure", None),
         ("Ollama", "ollama", "http://localhost:11434/v1"),
     ]
@@ -324,6 +376,23 @@ def ask_gemini_thinking_config() -> str | None:
             ("pointer", "fg:green noinherit"),
         ]),
     ).ask()
+
+
+def ask_moonshot_thinking() -> bool:
+    """Ask whether to enable kimi-k2.6/k2.5 thinking capability."""
+    choice = questionary.select(
+        "Enable Thinking Capability (kimi-k2.6/k2.5):",
+        choices=[
+            questionary.Choice("Enable (recommended, deeper reasoning)", value=True),
+            questionary.Choice("Disable (faster, lower cost)", value=False),
+        ],
+        style=questionary.Style([
+            ("selected", "fg:cyan noinherit"),
+            ("highlighted", "fg:cyan noinherit"),
+            ("pointer", "fg:cyan noinherit"),
+        ]),
+    ).ask()
+    return choice if choice is not None else True
 
 
 def ask_output_language() -> str:

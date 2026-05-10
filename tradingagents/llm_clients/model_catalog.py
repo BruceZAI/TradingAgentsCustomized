@@ -101,6 +101,20 @@ MODEL_OPTIONS: ProviderModeOptions = {
             ("Custom model ID", "custom"),
         ],
     },
+    "moonshot": {
+        "quick": [
+            ("Kimi K2.6 - Latest flagship, multimodal, 256k context", "kimi-k2.6"),
+            ("Kimi K2.5 - Previous flagship, 256k context", "kimi-k2.5"),
+            ("Moonshot v1 32k - Stable, balanced", "moonshot-v1-32k"),
+            ("Custom model ID", "custom"),
+        ],
+        "deep": [
+            ("Kimi K2.6 - Latest flagship, multimodal, 256k context", "kimi-k2.6"),
+            ("Kimi K2.5 - Previous flagship, 256k context", "kimi-k2.5"),
+            ("Moonshot v1 128k - Long context analysis", "moonshot-v1-128k"),
+            ("Custom model ID", "custom"),
+        ],
+    },
     # OpenRouter: fetched dynamically. Azure: any deployed model name.
     "ollama": {
         "quick": [

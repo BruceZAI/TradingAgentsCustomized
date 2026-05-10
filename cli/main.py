@@ -548,53 +548,43 @@ def get_user_selections():
     )
     selected_research_depth = select_research_depth()
 
-    # Step 6: LLM Provider
+    # Step 6: Thinking agents (provider + model selected per role)
     console.print(
         create_question_box(
-            "Step 6: LLM Provider", "Select your LLM provider"
+            "Step 6: Thinking Agents", "Select provider and model for each thinking role"
         )
     )
-    selected_llm_provider, backend_url = select_llm_provider()
+    quick_provider, selected_shallow_thinker, quick_backend_url = select_shallow_thinking_agent(None)
+    deep_provider, selected_deep_thinker, deep_backend_url = select_deep_thinking_agent(None)
 
-    # Step 7: Thinking agents
-    console.print(
-        create_question_box(
-            "Step 7: Thinking Agents", "Select your thinking agents for analysis"
-        )
-    )
-    selected_shallow_thinker = select_shallow_thinking_agent(selected_llm_provider)
-    selected_deep_thinker = select_deep_thinking_agent(selected_llm_provider)
+    selected_llm_provider = quick_provider
+    backend_url = quick_backend_url
 
-    # Step 8: Provider-specific thinking configuration
+    # Step 7: Provider-specific thinking configuration
+    # Collect the set of unique providers that need configuration prompts
     thinking_level = None
     reasoning_effort = None
     anthropic_effort = None
+    moonshot_thinking_enabled = True
 
-    provider_lower = selected_llm_provider.lower()
-    if provider_lower == "google":
-        console.print(
-            create_question_box(
-                "Step 8: Thinking Mode",
-                "Configure Gemini thinking mode"
-            )
-        )
+    unique_providers = {quick_provider.lower(), deep_provider.lower()}
+    step7_label = "Step 7: Thinking Configuration"
+
+    if "google" in unique_providers:
+        console.print(create_question_box(step7_label, "Configure Gemini thinking mode"))
         thinking_level = ask_gemini_thinking_config()
-    elif provider_lower == "openai":
-        console.print(
-            create_question_box(
-                "Step 8: Reasoning Effort",
-                "Configure OpenAI reasoning effort level"
-            )
-        )
+
+    if "openai" in unique_providers:
+        console.print(create_question_box(step7_label, "Configure OpenAI reasoning effort level"))
         reasoning_effort = ask_openai_reasoning_effort()
-    elif provider_lower == "anthropic":
-        console.print(
-            create_question_box(
-                "Step 8: Effort Level",
-                "Configure Claude effort level"
-            )
-        )
+
+    if "anthropic" in unique_providers:
+        console.print(create_question_box(step7_label, "Configure Claude effort level"))
         anthropic_effort = ask_anthropic_effort()
+
+    if "moonshot" in unique_providers:
+        console.print(create_question_box(step7_label, "Configure Kimi thinking capability"))
+        moonshot_thinking_enabled = ask_moonshot_thinking()
 
     return {
         "ticker": selected_ticker,
@@ -605,9 +595,14 @@ def get_user_selections():
         "backend_url": backend_url,
         "shallow_thinker": selected_shallow_thinker,
         "deep_thinker": selected_deep_thinker,
+        "quick_think_provider": quick_provider.lower(),
+        "deep_think_provider": deep_provider.lower(),
+        "quick_think_backend_url": quick_backend_url,
+        "deep_think_backend_url": deep_backend_url,
         "google_thinking_level": thinking_level,
         "openai_reasoning_effort": reasoning_effort,
         "anthropic_effort": anthropic_effort,
+        "moonshot_thinking_enabled": moonshot_thinking_enabled,
         "output_language": output_language,
     }
 
@@ -938,10 +933,16 @@ def run_analysis(checkpoint: bool = False):
     config["deep_think_llm"] = selections["deep_thinker"]
     config["backend_url"] = selections["backend_url"]
     config["llm_provider"] = selections["llm_provider"].lower()
+    # Per-role provider overrides
+    config["quick_think_provider"] = selections.get("quick_think_provider")
+    config["deep_think_provider"] = selections.get("deep_think_provider")
+    config["quick_think_backend_url"] = selections.get("quick_think_backend_url")
+    config["deep_think_backend_url"] = selections.get("deep_think_backend_url")
     # Provider-specific thinking configuration
     config["google_thinking_level"] = selections.get("google_thinking_level")
     config["openai_reasoning_effort"] = selections.get("openai_reasoning_effort")
     config["anthropic_effort"] = selections.get("anthropic_effort")
+    config["moonshot_thinking_enabled"] = selections.get("moonshot_thinking_enabled", True)
     config["output_language"] = selections.get("output_language", "English")
     config["checkpoint_enabled"] = checkpoint
 
