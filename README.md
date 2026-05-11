@@ -28,6 +28,7 @@
 # TradingAgents: Multi-Agents LLM Financial Trading Framework
 
 ## News
+- [2026-05] **More model support** — Added Moonshot (Kimi) provider with `kimi-k2.6`/`kimi-k2.5` and configurable thinking capability; Quick-Thinking and Deep-Thinking LLMs can now be selected from **different providers independently**.
 - [2026-04] **TradingAgents v0.2.4** released with structured-output agents (Research Manager, Trader, Portfolio Manager), LangGraph checkpoint resume, persistent decision log, DeepSeek/Qwen/GLM/Azure provider support, Docker, and a Windows UTF-8 encoding fix. See [CHANGELOG.md](CHANGELOG.md) for the full list.
 - [2026-03] **TradingAgents v0.2.3** released with multi-language support, GPT-5.4 family models, unified model catalog, backtesting date fidelity, and proxy support.
 - [2026-03] **TradingAgents v0.2.2** released with GPT-5.4/Gemini 3.1/Claude 4.6 model coverage, five-tier rating scale, OpenAI Responses API, Anthropic effort control, and cross-platform stability.
@@ -145,6 +146,7 @@ export DEEPSEEK_API_KEY=...        # DeepSeek
 export DASHSCOPE_API_KEY=...       # Qwen (Alibaba DashScope)
 export ZHIPU_API_KEY=...           # GLM (Zhipu)
 export OPENROUTER_API_KEY=...      # OpenRouter
+export MOONSHOT_API_KEY=...        # Moonshot (Kimi)
 export ALPHA_VANTAGE_API_KEY=...   # Alpha Vantage
 ```
 
@@ -184,7 +186,7 @@ An interface will appear showing results as they load, letting you track the age
 
 ### Implementation Details
 
-We built TradingAgents with LangGraph to ensure flexibility and modularity. The framework supports multiple LLM providers: OpenAI, Google, Anthropic, xAI, DeepSeek, Qwen (Alibaba DashScope), GLM (Zhipu), OpenRouter, Ollama for local models, and Azure OpenAI for enterprise.
+We built TradingAgents with LangGraph to ensure flexibility and modularity. The framework supports multiple LLM providers: OpenAI, Google, Anthropic, xAI, DeepSeek, Qwen (Alibaba DashScope), GLM (Zhipu), OpenRouter, Moonshot (Kimi), Ollama for local models, and Azure OpenAI for enterprise. Quick-Thinking and Deep-Thinking LLMs can be configured with **different providers**, enabling cost-effective mixed deployments.
 
 ### Python Usage
 
@@ -208,10 +210,18 @@ from tradingagents.graph.trading_graph import TradingAgentsGraph
 from tradingagents.default_config import DEFAULT_CONFIG
 
 config = DEFAULT_CONFIG.copy()
-config["llm_provider"] = "openai"        # openai, google, anthropic, xai, deepseek, qwen, glm, openrouter, ollama, azure
-config["deep_think_llm"] = "gpt-5.4"     # Model for complex reasoning
+config["llm_provider"] = "openai"          # openai, google, anthropic, xai, deepseek, qwen, glm, openrouter, moonshot, ollama, azure
+config["deep_think_llm"] = "gpt-5.4"       # Model for complex reasoning
 config["quick_think_llm"] = "gpt-5.4-mini" # Model for quick tasks
 config["max_debate_rounds"] = 2
+
+# Optional: use different providers for each role
+config["deep_think_provider"] = "openai"       # overrides llm_provider for deep role
+config["quick_think_provider"] = "moonshot"    # overrides llm_provider for quick role
+config["quick_think_llm"] = "kimi-k2.6"
+
+# Moonshot thinking capability (kimi-k2.6 / kimi-k2.5 only)
+config["moonshot_thinking_enabled"] = True     # True = enable, False = disable (faster)
 
 ta = TradingAgentsGraph(debug=True, config=config)
 _, decision = ta.propagate("NVDA", "2026-01-15")
