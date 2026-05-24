@@ -142,7 +142,7 @@ _MOONSHOT_THINKING_MODELS = {"kimi-k2.6", "kimi-k2.5"}
 class MoonshotChatOpenAI(NormalizedChatOpenAI):
     """Moonshot-specific override that injects the thinking control parameter.
 
-    kimi-k2.6 and kimi-k2.5 support an ``extra_body`` thinking field:
+    kimi-k2.6 and kimi-k2.5 support an ``extra_body.thinking`` field:
       {"type": "enabled"} (default) or {"type": "disabled"}.
     Only these models accept the parameter; older moonshot-v1-* models ignore
     extra_body cleanly, but we only inject it for models that need it.
@@ -154,7 +154,9 @@ class MoonshotChatOpenAI(NormalizedChatOpenAI):
         payload = super()._get_request_payload(input_, stop=stop, **kwargs)
         if self.model_name in _MOONSHOT_THINKING_MODELS:
             thinking_type = "enabled" if self.thinking_enabled else "disabled"
-            payload.setdefault("thinking", {"type": thinking_type})
+            extra_body = payload.setdefault("extra_body", {})
+            if isinstance(extra_body, dict):
+                extra_body.setdefault("thinking", {"type": thinking_type})
         return payload
 
 

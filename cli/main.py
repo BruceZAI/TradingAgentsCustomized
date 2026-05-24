@@ -576,6 +576,10 @@ def get_user_selections():
     unique_providers = {quick_provider.lower(), deep_provider.lower()}
     step7_label = "Step 7: Thinking Configuration"
 
+    # Ensure API keys are present for both selected providers before run.
+    for provider in sorted(unique_providers):
+        ensure_api_key(provider)
+
     if "google" in unique_providers:
         console.print(create_question_box(step7_label, "Configure Gemini thinking mode"))
         thinking_level = ask_gemini_thinking_config()
