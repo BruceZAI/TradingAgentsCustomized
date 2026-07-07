@@ -162,6 +162,28 @@ class MinimaxChatOpenAI(NormalizedChatOpenAI):
         return payload
 
 
+_MOONSHOT_THINKING_MODELS = {"kimi-k2.6", "kimi-k2.5"}
+
+
+class MoonshotChatOpenAI(NormalizedChatOpenAI):
+    """Moonshot-specific override that injects the thinking control parameter.
+
+    kimi-k2.6 and kimi-k2.5 support an ``extra_body.thinking`` field:
+    {"type": "enabled"} or {"type": "disabled"}.
+    """
+
+    thinking_enabled: bool = True
+
+    def _get_request_payload(self, input_, *, stop=None, **kwargs):
+        payload = super()._get_request_payload(input_, stop=stop, **kwargs)
+        if self.model_name in _MOONSHOT_THINKING_MODELS:
+            thinking_type = "enabled" if self.thinking_enabled else "disabled"
+            extra_body = payload.setdefault("extra_body", {})
+            if isinstance(extra_body, dict):
+                extra_body.setdefault("thinking", {"type": thinking_type})
+        return payload
+
+
 # Kwargs forwarded from user config to ChatOpenAI
 _PASSTHROUGH_KWARGS = (
     "timeout", "max_retries", "reasoning_effort", "temperature",

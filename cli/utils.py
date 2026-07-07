@@ -357,7 +357,6 @@ def _llm_provider_table() -> list[tuple[str, str, str | None]]:
         ("OpenRouter", "openrouter", "https://openrouter.ai/api/v1"),
         ("Moonshot (Kimi)", "moonshot", "https://api.moonshot.cn/v1"),
         ("Mistral", "mistral", "https://api.mistral.ai/v1"),
-        ("Kimi (Moonshot)", "kimi", "https://api.moonshot.ai/v1"),
         ("Groq", "groq", "https://api.groq.com/openai/v1"),
         ("NVIDIA NIM", "nvidia", "https://integrate.api.nvidia.com/v1"),
         ("Azure OpenAI", "azure", None),
@@ -370,6 +369,8 @@ def _llm_provider_table() -> list[tuple[str, str, str | None]]:
 def provider_default_url(provider_key: str) -> str | None:
     """Return the default backend URL for a provider key, or None if unknown."""
     key = provider_key.lower()
+    if key == "kimi":
+        return "https://api.moonshot.ai/v1"
     for _, pk, url in _llm_provider_table():
         if pk == key:
             return url
@@ -529,6 +530,23 @@ def ask_gemini_thinking_config() -> str | None:
             ("pointer", "fg:green noinherit"),
         ]),
     ).ask()
+
+
+def ask_moonshot_thinking() -> bool:
+    """Ask whether to enable Kimi thinking capability for Moonshot models."""
+    choice = questionary.select(
+        "Enable Thinking Capability (kimi-k2.6/k2.5):",
+        choices=[
+            questionary.Choice("Enable (recommended, deeper reasoning)", value=True),
+            questionary.Choice("Disable (faster, lower cost)", value=False),
+        ],
+        style=questionary.Style([
+            ("selected", "fg:cyan noinherit"),
+            ("highlighted", "fg:cyan noinherit"),
+            ("pointer", "fg:cyan noinherit"),
+        ]),
+    ).ask()
+    return choice if choice is not None else True
 
 
 def ask_glm_region() -> tuple[str, str]:
