@@ -163,20 +163,31 @@ class MinimaxChatOpenAI(NormalizedChatOpenAI):
 
 
 _MOONSHOT_THINKING_MODELS = {"kimi-k2.6", "kimi-k2.5"}
+_MOONSHOT_REASONING_EFFORT_MODELS = {"kimi-k3"}
 
 
 class MoonshotChatOpenAI(NormalizedChatOpenAI):
-    """Moonshot-specific override that injects the thinking control parameter.
+    """Moonshot-specific override for Kimi reasoning parameters.
 
     kimi-k2.6 and kimi-k2.5 support an ``extra_body.thinking`` field:
     {"type": "enabled"} or {"type": "disabled"}.
+
+    kimi-k3 always reasons and instead requires the top-level
+    ``reasoning_effort="max"`` parameter. It must not receive the K2.x
+    ``thinking`` field.
     """
 
     thinking_enabled: bool = True
 
     def _get_request_payload(self, input_, *, stop=None, **kwargs):
         payload = super()._get_request_payload(input_, stop=stop, **kwargs)
-        if self.model_name in _MOONSHOT_THINKING_MODELS:
+        model_name = self.model_name.lower().strip()
+        if model_name in _MOONSHOT_REASONING_EFFORT_MODELS:
+            # K3 fixes its sampling parameters server-side; carrying a global
+            # temperature setting into this request is unsupported.
+            payload.pop("temperature", None)
+            payload["reasoning_effort"] = "max"
+        elif model_name in _MOONSHOT_THINKING_MODELS:
             thinking_type = "enabled" if self.thinking_enabled else "disabled"
             extra_body = payload.setdefault("extra_body", {})
             if isinstance(extra_body, dict):

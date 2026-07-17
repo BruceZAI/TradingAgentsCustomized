@@ -178,13 +178,15 @@ MODEL_OPTIONS: ProviderModeOptions = {
     },
     "moonshot": {
         "quick": [
-            ("Kimi K2.6 - Latest flagship, multimodal, 256k context", "kimi-k2.6"),
+            ("Kimi K3 - Latest flagship, multimodal, 1M context", "kimi-k3"),
+            ("Kimi K2.6 - Previous flagship, multimodal, 256k context", "kimi-k2.6"),
             ("Kimi K2.5 - Previous flagship, 256k context", "kimi-k2.5"),
             ("Moonshot v1 32k - Stable, balanced", "moonshot-v1-32k"),
             ("Custom model ID", "custom"),
         ],
         "deep": [
-            ("Kimi K2.6 - Latest flagship, multimodal, 256k context", "kimi-k2.6"),
+            ("Kimi K3 - Latest flagship, always-on reasoning, 1M context", "kimi-k3"),
+            ("Kimi K2.6 - Previous flagship, multimodal, 256k context", "kimi-k2.6"),
             ("Kimi K2.5 - Previous flagship, 256k context", "kimi-k2.5"),
             ("Moonshot v1 128k - Long context analysis", "moonshot-v1-128k"),
             ("Custom model ID", "custom"),
