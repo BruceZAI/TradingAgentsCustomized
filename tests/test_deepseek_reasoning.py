@@ -21,6 +21,7 @@ from pydantic import BaseModel
 from tradingagents.llm_clients.openai_client import (
     DeepSeekChatOpenAI,
     NormalizedChatOpenAI,
+    OpenAIClient,
     _input_to_messages,
 )
 
@@ -54,13 +55,45 @@ class TestInputToMessages:
 
 @pytest.mark.unit
 class TestDeepSeekReasoningContent:
-    def _client(self):
+    def _client(self, thinking_mode="high"):
         os.environ.setdefault("DEEPSEEK_API_KEY", "placeholder")
         return DeepSeekChatOpenAI(
             model="deepseek-v4-flash",
             api_key="placeholder",
             base_url="https://api.deepseek.com",
+            deepseek_thinking_mode=thinking_mode,
         )
+
+    @pytest.mark.parametrize("effort", ["low", "high", "max"])
+    def test_thinking_mode_payload(self, effort):
+        payload = self._client(effort)._get_request_payload(
+            [HumanMessage(content="hi")]
+        )
+        assert payload["extra_body"]["thinking"] == {"type": "enabled"}
+        assert payload["reasoning_effort"] == effort
+
+    def test_disabled_thinking_payload(self):
+        payload = self._client("disabled")._get_request_payload(
+            [HumanMessage(content="hi")]
+        )
+        assert payload["extra_body"]["thinking"] == {"type": "disabled"}
+        assert "reasoning_effort" not in payload
+
+    def test_invalid_thinking_mode_rejected(self):
+        with pytest.raises(ValueError, match="deepseek_thinking_mode"):
+            self._client("medium")._get_request_payload(
+                [HumanMessage(content="hi")]
+            )
+
+    def test_openai_client_wires_deepseek_thinking_mode(self, monkeypatch):
+        monkeypatch.setenv("DEEPSEEK_API_KEY", "placeholder")
+        llm = OpenAIClient(
+            model="deepseek-v4-flash",
+            provider="deepseek",
+            deepseek_thinking_mode="max",
+        ).get_llm()
+        assert isinstance(llm, DeepSeekChatOpenAI)
+        assert llm.deepseek_thinking_mode == "max"
 
     def test_capture_on_receive(self):
         """When the response carries reasoning_content, it lands on the

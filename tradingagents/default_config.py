@@ -24,6 +24,7 @@ _ENV_OVERRIDES = {
     # interactive choice, which is skipped when the matching var is set.
     "TRADINGAGENTS_GOOGLE_THINKING_LEVEL":   "google_thinking_level",
     "TRADINGAGENTS_OPENAI_REASONING_EFFORT": "openai_reasoning_effort",
+    "TRADINGAGENTS_DEEPSEEK_THINKING_MODE":   "deepseek_thinking_mode",
     "TRADINGAGENTS_ANTHROPIC_EFFORT":        "anthropic_effort",
 }
 
@@ -61,6 +62,14 @@ def _apply_env_overrides(config: dict) -> dict:
         raw = os.environ.get(env_var)
         if raw is None or raw == "":
             continue
+        if key == "deepseek_thinking_mode":
+            normalized = raw.strip().lower()
+            if normalized not in {"disabled", "low", "high", "max"}:
+                raise ValueError(
+                    f"Invalid value for {env_var}: expected disabled/low/high/max, "
+                    f"got {raw!r}"
+                )
+            raw = normalized
         try:
             config[key] = _coerce(raw, config.get(key))
         except ValueError as exc:
@@ -95,6 +104,7 @@ DEFAULT_CONFIG = _apply_env_overrides({
     # Provider-specific thinking configuration
     "google_thinking_level": None,      # "high", "minimal", etc.
     "openai_reasoning_effort": None,    # "medium", "high", "low"
+    "deepseek_thinking_mode": "high",   # "disabled", "low", "high", "max"
     "anthropic_effort": None,           # "high", "medium", "low"
     "moonshot_thinking_enabled": True,   # True = enable thinking, False = disable
     # Sampling temperature, forwarded to every provider when set. None leaves

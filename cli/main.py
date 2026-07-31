@@ -22,6 +22,7 @@ from cli.announcements import display_announcements, fetch_announcements
 from cli.stats_handler import StatsCallbackHandler
 from cli.utils import (
     ask_anthropic_effort,
+    ask_deepseek_thinking_config,
     ask_gemini_thinking_config,
     ask_glm_region,
     ask_minimax_region,
@@ -686,6 +687,7 @@ def get_user_selections():
     # provider's own default.
     thinking_level = None
     reasoning_effort = None
+    deepseek_thinking_mode = "high"
     anthropic_effort = None
     moonshot_thinking_enabled = True
 
@@ -700,6 +702,13 @@ def get_user_selections():
             "TRADINGAGENTS_OPENAI_REASONING_EFFORT", "openai_reasoning_effort",
             "Reasoning effort", "Step 8: Reasoning Effort",
             "Configure OpenAI reasoning effort level", ask_openai_reasoning_effort,
+        )
+    if "deepseek" in unique_providers:
+        deepseek_thinking_mode = thinking_value_or_prompt(
+            "TRADINGAGENTS_DEEPSEEK_THINKING_MODE", "deepseek_thinking_mode",
+            "DeepSeek thinking mode", "Step 8: DeepSeek Thinking",
+            "Configure DeepSeek thinking mode and reasoning effort",
+            ask_deepseek_thinking_config,
         )
     if "anthropic" in unique_providers:
         anthropic_effort = thinking_value_or_prompt(
@@ -727,6 +736,7 @@ def get_user_selections():
         "deep_think_backend_url": deep_backend_url,
         "google_thinking_level": thinking_level,
         "openai_reasoning_effort": reasoning_effort,
+        "deepseek_thinking_mode": deepseek_thinking_mode,
         "anthropic_effort": anthropic_effort,
         "moonshot_thinking_enabled": moonshot_thinking_enabled,
         "output_language": output_language,
@@ -988,6 +998,7 @@ def _build_run_config(selections: dict, checkpoint: bool | None) -> dict:
     # Provider-specific thinking configuration
     config["google_thinking_level"] = selections.get("google_thinking_level")
     config["openai_reasoning_effort"] = selections.get("openai_reasoning_effort")
+    config["deepseek_thinking_mode"] = selections.get("deepseek_thinking_mode", "high")
     config["anthropic_effort"] = selections.get("anthropic_effort")
     config["moonshot_thinking_enabled"] = selections.get("moonshot_thinking_enabled", True)
     config["output_language"] = selections.get("output_language", "English")

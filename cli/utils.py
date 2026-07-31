@@ -490,6 +490,25 @@ def ask_openai_reasoning_effort() -> str:
     ).ask()
 
 
+def ask_deepseek_thinking_config() -> str:
+    """Ask for DeepSeek thinking mode and reasoning effort."""
+    choice = questionary.select(
+        "Select DeepSeek Thinking Mode:",
+        choices=[
+            questionary.Choice("High (default, recommended)", "high"),
+            questionary.Choice("Max (deepest reasoning)", "max"),
+            questionary.Choice("Low (faster, lower cost)", "low"),
+            questionary.Choice("Disabled (non-thinking mode)", "disabled"),
+        ],
+        style=questionary.Style([
+            ("selected", "fg:cyan noinherit"),
+            ("highlighted", "fg:cyan noinherit"),
+            ("pointer", "fg:cyan noinherit"),
+        ]),
+    ).ask()
+    return choice if choice is not None else "high"
+
+
 def ask_anthropic_effort() -> str | None:
     """Ask for Anthropic effort level.
 

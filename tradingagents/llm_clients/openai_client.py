@@ -88,8 +88,11 @@ def _input_to_messages(input_: Any) -> list:
 class DeepSeekChatOpenAI(NormalizedChatOpenAI):
     """DeepSeek-specific overrides on top of the OpenAI-compatible client.
 
-    Thinking-mode round-trip is the only DeepSeek-specific behavior that
-    stays here. When DeepSeek's thinking models return a response with
+    ``deepseek_thinking_mode`` maps the project's single setting to DeepSeek's
+    OpenAI-compatible request fields: ``extra_body.thinking`` controls the
+    toggle and top-level ``reasoning_effort`` controls low/high/max effort.
+
+    When DeepSeek's thinking models return a response with
     ``reasoning_content``, that field must be echoed back as part of the
     assistant message on the next turn or the API fails with HTTP 400.
     ``_create_chat_result`` captures it on receive and
@@ -100,8 +103,27 @@ class DeepSeekChatOpenAI(NormalizedChatOpenAI):
     ``NormalizedChatOpenAI.with_structured_output``, not here.
     """
 
+    deepseek_thinking_mode: str = "high"
+
     def _get_request_payload(self, input_, *, stop=None, **kwargs):
         payload = super()._get_request_payload(input_, stop=stop, **kwargs)
+        thinking_mode = self.deepseek_thinking_mode.lower().strip()
+        supported_modes = {"disabled", "low", "high", "max"}
+        if thinking_mode not in supported_modes:
+            raise ValueError(
+                "deepseek_thinking_mode must be one of: disabled, low, high, max"
+            )
+
+        extra_body = payload.setdefault("extra_body", {})
+        if isinstance(extra_body, dict):
+            thinking_type = "disabled" if thinking_mode == "disabled" else "enabled"
+            extra_body["thinking"] = {"type": thinking_type}
+
+        if thinking_mode == "disabled":
+            payload.pop("reasoning_effort", None)
+        else:
+            payload["reasoning_effort"] = thinking_mode
+
         outgoing = payload.get("messages", [])
         for message_dict, message in zip(outgoing, _input_to_messages(input_), strict=False):
             if not isinstance(message, AIMessage):
@@ -366,6 +388,10 @@ class OpenAIClient(BaseLLMClient):
         if self.provider == "moonshot":
             llm_kwargs["thinking_enabled"] = self.kwargs.get(
                 "moonshot_thinking_enabled", True
+            )
+        elif self.provider == "deepseek":
+            llm_kwargs["deepseek_thinking_mode"] = self.kwargs.get(
+                "deepseek_thinking_mode", "high"
             )
 
         # The subclass (provider quirks) comes from the registry spec.
