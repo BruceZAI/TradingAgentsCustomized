@@ -74,11 +74,13 @@ def test_reasoning_thinking_overrides(monkeypatch):
         monkeypatch,
         TRADINGAGENTS_OPENAI_REASONING_EFFORT="high",
         TRADINGAGENTS_DEEPSEEK_THINKING_MODE="max",
+        TRADINGAGENTS_MOONSHOT_K3_REASONING_EFFORT="low",
         TRADINGAGENTS_GOOGLE_THINKING_LEVEL="minimal",
         TRADINGAGENTS_ANTHROPIC_EFFORT="low",
     )
     assert dc.DEFAULT_CONFIG["openai_reasoning_effort"] == "high"
     assert dc.DEFAULT_CONFIG["deepseek_thinking_mode"] == "max"
+    assert dc.DEFAULT_CONFIG["moonshot_k3_reasoning_effort"] == "low"
     assert dc.DEFAULT_CONFIG["google_thinking_level"] == "minimal"
     assert dc.DEFAULT_CONFIG["anthropic_effort"] == "low"
 
@@ -88,6 +90,7 @@ def test_reasoning_effort_defaults_to_none(monkeypatch):
     dc = _reload_with_env(monkeypatch)
     assert dc.DEFAULT_CONFIG["openai_reasoning_effort"] is None
     assert dc.DEFAULT_CONFIG["deepseek_thinking_mode"] == "high"
+    assert dc.DEFAULT_CONFIG["moonshot_k3_reasoning_effort"] == "max"
     assert dc.DEFAULT_CONFIG["google_thinking_level"] is None
     assert dc.DEFAULT_CONFIG["anthropic_effort"] is None
 

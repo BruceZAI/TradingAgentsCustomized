@@ -552,9 +552,9 @@ def ask_gemini_thinking_config() -> str | None:
 
 
 def ask_moonshot_thinking() -> bool:
-    """Ask whether to enable Kimi thinking capability for Moonshot models."""
+    """Ask whether to enable thinking for configurable Kimi K2 models."""
     choice = questionary.select(
-        "Enable Thinking Capability (kimi-k2.6/k2.5):",
+        "Enable Kimi K2 Thinking (K2.6/K2.5 only):",
         choices=[
             questionary.Choice("Enable (recommended, deeper reasoning)", value=True),
             questionary.Choice("Disable (faster, lower cost)", value=False),
@@ -566,6 +566,24 @@ def ask_moonshot_thinking() -> bool:
         ]),
     ).ask()
     return choice if choice is not None else True
+
+
+def ask_moonshot_k3_reasoning_effort() -> str:
+    """Ask for Kimi K3 reasoning effort; K3 thinking is always enabled."""
+    choice = questionary.select(
+        "Select Kimi K3 Reasoning Effort (thinking is always enabled):",
+        choices=[
+            questionary.Choice("Max (default, deepest reasoning)", "max"),
+            questionary.Choice("High (balanced)", "high"),
+            questionary.Choice("Low (faster, lower cost)", "low"),
+        ],
+        style=questionary.Style([
+            ("selected", "fg:cyan noinherit"),
+            ("highlighted", "fg:cyan noinherit"),
+            ("pointer", "fg:cyan noinherit"),
+        ]),
+    ).ask()
+    return choice if choice is not None else "max"
 
 
 def ask_glm_region() -> tuple[str, str]:

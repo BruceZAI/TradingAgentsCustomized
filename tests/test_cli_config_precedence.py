@@ -21,6 +21,7 @@ SELECTIONS = {
     "google_thinking_level": None,
     "openai_reasoning_effort": None,
     "deepseek_thinking_mode": "high",
+    "moonshot_k3_reasoning_effort": "max",
     "anthropic_effort": None,
     "output_language": "English",
 }

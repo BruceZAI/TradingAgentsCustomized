@@ -26,6 +26,7 @@ _ENV_OVERRIDES = {
     "TRADINGAGENTS_OPENAI_REASONING_EFFORT": "openai_reasoning_effort",
     "TRADINGAGENTS_DEEPSEEK_THINKING_MODE":   "deepseek_thinking_mode",
     "TRADINGAGENTS_ANTHROPIC_EFFORT":        "anthropic_effort",
+    "TRADINGAGENTS_MOONSHOT_K3_REASONING_EFFORT": "moonshot_k3_reasoning_effort",
 }
 
 
@@ -70,6 +71,13 @@ def _apply_env_overrides(config: dict) -> dict:
                     f"got {raw!r}"
                 )
             raw = normalized
+        if key == "moonshot_k3_reasoning_effort":
+            normalized = raw.strip().lower()
+            if normalized not in {"low", "high", "max"}:
+                raise ValueError(
+                    f"Invalid value for {env_var}: expected low/high/max, got {raw!r}"
+                )
+            raw = normalized
         try:
             config[key] = _coerce(raw, config.get(key))
         except ValueError as exc:
@@ -107,6 +115,7 @@ DEFAULT_CONFIG = _apply_env_overrides({
     "deepseek_thinking_mode": "high",   # "disabled", "low", "high", "max"
     "anthropic_effort": None,           # "high", "medium", "low"
     "moonshot_thinking_enabled": True,   # True = enable thinking, False = disable
+    "moonshot_k3_reasoning_effort": "max",  # K3 is always thinking: low/high/max
     # Sampling temperature, forwarded to every provider when set. None leaves
     # each provider at its own default. Lower values reduce run-to-run
     # variation on models that honor it; reasoning models largely ignore it

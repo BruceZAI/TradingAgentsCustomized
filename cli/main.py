@@ -26,6 +26,7 @@ from cli.utils import (
     ask_gemini_thinking_config,
     ask_glm_region,
     ask_minimax_region,
+    ask_moonshot_k3_reasoning_effort,
     ask_moonshot_thinking,
     ask_openai_reasoning_effort,
     ask_output_language,
@@ -690,6 +691,7 @@ def get_user_selections():
     deepseek_thinking_mode = "high"
     anthropic_effort = None
     moonshot_thinking_enabled = True
+    moonshot_k3_reasoning_effort = "max"
 
     if "google" in unique_providers:
         thinking_level = thinking_value_or_prompt(
@@ -716,9 +718,29 @@ def get_user_selections():
             "Claude effort", "Step 8: Effort Level",
             "Configure Claude effort level", ask_anthropic_effort,
         )
-    if "moonshot" in unique_providers:
-        console.print(create_question_box("Step 8: Kimi Thinking", "Configure Kimi thinking capability"))
+    moonshot_models = {
+        str(model).lower()
+        for provider, model in (
+            (quick_provider, selected_shallow_thinker),
+            (deep_provider, selected_deep_thinker),
+        )
+        if provider.lower() == "moonshot"
+    }
+    if moonshot_models & {"kimi-k2.6", "kimi-k2.5"}:
+        console.print(create_question_box(
+            "Step 8: Kimi K2 Thinking",
+            "Configure K2.6/K2.5 thinking; this setting does not affect K3",
+        ))
         moonshot_thinking_enabled = ask_moonshot_thinking()
+    if "kimi-k3" in moonshot_models:
+        moonshot_k3_reasoning_effort = thinking_value_or_prompt(
+            "TRADINGAGENTS_MOONSHOT_K3_REASONING_EFFORT",
+            "moonshot_k3_reasoning_effort",
+            "Kimi K3 reasoning effort",
+            "Step 8: Kimi K3 Reasoning",
+            "K3 thinking is always enabled; configure its reasoning effort",
+            ask_moonshot_k3_reasoning_effort,
+        )
 
     return {
         "ticker": selected_ticker,
@@ -739,6 +761,7 @@ def get_user_selections():
         "deepseek_thinking_mode": deepseek_thinking_mode,
         "anthropic_effort": anthropic_effort,
         "moonshot_thinking_enabled": moonshot_thinking_enabled,
+        "moonshot_k3_reasoning_effort": moonshot_k3_reasoning_effort,
         "output_language": output_language,
     }
 
@@ -1001,6 +1024,9 @@ def _build_run_config(selections: dict, checkpoint: bool | None) -> dict:
     config["deepseek_thinking_mode"] = selections.get("deepseek_thinking_mode", "high")
     config["anthropic_effort"] = selections.get("anthropic_effort")
     config["moonshot_thinking_enabled"] = selections.get("moonshot_thinking_enabled", True)
+    config["moonshot_k3_reasoning_effort"] = selections.get(
+        "moonshot_k3_reasoning_effort", "max"
+    )
     config["output_language"] = selections.get("output_language", "English")
     # --checkpoint/--no-checkpoint overrides only when explicitly given; omitting
     # the flag preserves TRADINGAGENTS_CHECKPOINT_ENABLED / the default (#976).

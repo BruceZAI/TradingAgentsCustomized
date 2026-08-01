@@ -200,15 +200,21 @@ class MoonshotChatOpenAI(NormalizedChatOpenAI):
     """
 
     thinking_enabled: bool = True
+    k3_reasoning_effort: str = "max"
 
     def _get_request_payload(self, input_, *, stop=None, **kwargs):
         payload = super()._get_request_payload(input_, stop=stop, **kwargs)
         model_name = self.model_name.lower().strip()
         if model_name in _MOONSHOT_REASONING_EFFORT_MODELS:
+            reasoning_effort = self.k3_reasoning_effort.lower().strip()
+            if reasoning_effort not in {"low", "high", "max"}:
+                raise ValueError(
+                    "moonshot_k3_reasoning_effort must be one of: low, high, max"
+                )
             # K3 fixes its sampling parameters server-side; carrying a global
             # temperature setting into this request is unsupported.
             payload.pop("temperature", None)
-            payload["reasoning_effort"] = "max"
+            payload["reasoning_effort"] = reasoning_effort
         elif model_name in _MOONSHOT_THINKING_MODELS:
             thinking_type = "enabled" if self.thinking_enabled else "disabled"
             extra_body = payload.setdefault("extra_body", {})
@@ -388,6 +394,9 @@ class OpenAIClient(BaseLLMClient):
         if self.provider == "moonshot":
             llm_kwargs["thinking_enabled"] = self.kwargs.get(
                 "moonshot_thinking_enabled", True
+            )
+            llm_kwargs["k3_reasoning_effort"] = self.kwargs.get(
+                "moonshot_k3_reasoning_effort", "max"
             )
         elif self.provider == "deepseek":
             llm_kwargs["deepseek_thinking_mode"] = self.kwargs.get(

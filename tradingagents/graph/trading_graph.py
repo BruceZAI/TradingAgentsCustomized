@@ -192,6 +192,9 @@ class TradingAgentsGraph:
             kwargs["moonshot_thinking_enabled"] = self.config.get(
                 "moonshot_thinking_enabled", True
             )
+            kwargs["moonshot_k3_reasoning_effort"] = self.config.get(
+                "moonshot_k3_reasoning_effort", "max"
+            )
 
         # Sampling temperature is cross-provider: forward it whenever set.
         # float() here so a value coming from a TRADINGAGENTS_TEMPERATURE env
