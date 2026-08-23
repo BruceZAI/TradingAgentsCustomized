@@ -2,10 +2,20 @@
 
 import pytest
 from langchain_core.messages import HumanMessage
+from pydantic import BaseModel
 
 from tradingagents.llm_clients.model_catalog import get_model_options
 from tradingagents.llm_clients.openai_client import MoonshotChatOpenAI
 from tradingagents.llm_clients.validators import validate_model
+
+
+class _StructuredResult(BaseModel):
+    decision: str
+
+
+def _bound_kwargs(runnable):
+    first = runnable.steps[0] if hasattr(runnable, "steps") else runnable
+    return getattr(first, "kwargs", {})
 
 
 def _client(
@@ -55,6 +65,38 @@ def test_kimi_k3_rejects_invalid_reasoning_effort():
         _client("kimi-k3", k3_reasoning_effort="medium")._get_request_payload(
             [HumanMessage(content="hi")]
         )
+
+
+@pytest.mark.unit
+def test_kimi_k3_structured_output_uses_json_schema_without_tool_choice():
+    kwargs = _bound_kwargs(_client("kimi-k3").with_structured_output(_StructuredResult))
+
+    assert kwargs["response_format"] is _StructuredResult
+    assert "tools" not in kwargs
+    assert "tool_choice" not in kwargs
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize("model", ["kimi-k2.6", "kimi-k2.5"])
+def test_thinking_kimi_k2_structured_output_uses_json_schema(model):
+    kwargs = _bound_kwargs(
+        _client(model, thinking_enabled=True).with_structured_output(_StructuredResult)
+    )
+
+    assert kwargs["response_format"] is _StructuredResult
+    assert "tool_choice" not in kwargs
+
+
+@pytest.mark.unit
+def test_non_thinking_kimi_k2_keeps_function_calling_structured_output():
+    kwargs = _bound_kwargs(
+        _client("kimi-k2.6", thinking_enabled=False).with_structured_output(
+            _StructuredResult
+        )
+    )
+
+    assert kwargs.get("tools")
+    assert kwargs.get("tool_choice") is not None
 
 
 @pytest.mark.unit

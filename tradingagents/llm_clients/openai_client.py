@@ -202,6 +202,22 @@ class MoonshotChatOpenAI(NormalizedChatOpenAI):
     thinking_enabled: bool = True
     k3_reasoning_effort: str = "max"
 
+    def with_structured_output(self, schema, *, method=None, **kwargs):
+        """Use JSON Schema when Kimi thinking forbids a specified tool choice.
+
+        LangChain's function-calling structured-output path selects the schema
+        tool explicitly. Kimi rejects that ``tool_choice`` while thinking is
+        enabled. Moonshot supports native ``json_schema`` output, which keeps
+        the typed result without involving tool selection.
+        """
+        model_name = self.model_name.lower().strip()
+        thinking_model = model_name in _MOONSHOT_REASONING_EFFORT_MODELS or (
+            model_name in _MOONSHOT_THINKING_MODELS and self.thinking_enabled
+        )
+        if method is None and thinking_model:
+            method = "json_schema"
+        return super().with_structured_output(schema, method=method, **kwargs)
+
     def _get_request_payload(self, input_, *, stop=None, **kwargs):
         payload = super()._get_request_payload(input_, stop=stop, **kwargs)
         model_name = self.model_name.lower().strip()
