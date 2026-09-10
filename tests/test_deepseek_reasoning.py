@@ -55,10 +55,14 @@ class TestInputToMessages:
 
 @pytest.mark.unit
 class TestDeepSeekReasoningContent:
+    @pytest.fixture(autouse=True, params=["deepseek-v4-flash", "deepseek-flash"])
+    def model_variant(self, request):
+        self.model = request.param
+
     def _client(self, thinking_mode="high"):
         os.environ.setdefault("DEEPSEEK_API_KEY", "placeholder")
         return DeepSeekChatOpenAI(
-            model="deepseek-v4-flash",
+            model=self.model,
             api_key="placeholder",
             base_url="https://api.deepseek.com",
             deepseek_thinking_mode=thinking_mode,
@@ -185,8 +189,9 @@ class TestStructuredOutputCapabilityDispatch:
         assert _bound_kwargs(bound).get("tool_choice") in (None, ...) or \
             "tool_choice" not in _bound_kwargs(bound)
 
-    def test_v4_flash_suppresses_tool_choice(self):
-        bound = self._client("deepseek-v4-flash").with_structured_output(self._Sample)
+    @pytest.mark.parametrize("model", ["deepseek-v4-flash", "deepseek-flash"])
+    def test_v4_flash_suppresses_tool_choice(self, model):
+        bound = self._client(model).with_structured_output(self._Sample)
         assert _bound_kwargs(bound).get("tool_choice") is None or \
             "tool_choice" not in _bound_kwargs(bound)
 

@@ -16,6 +16,9 @@ VALID_MODELS = {
     if provider not in _ANY_MODEL_PROVIDERS
 }
 
+# Existing saved configurations may still use the official legacy Flash alias.
+VALID_MODELS["deepseek"].append("deepseek-v4-flash")
+
 
 def validate_model(provider: str, model: str) -> bool:
     """Check if model name is valid for the given provider.
