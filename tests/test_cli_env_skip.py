@@ -41,6 +41,7 @@ class TestCliSkipsPromptsFromEnv(unittest.TestCase):
             "TRADINGAGENTS_QUICK_THINK_LLM": "deepseek-v4-pro",
             "TRADINGAGENTS_LLM_BACKEND_URL": "https://opencode.ai/zen/go/v1",
             "TRADINGAGENTS_OUTPUT_LANGUAGE": "Japanese",
+            "TRADINGAGENTS_OPENAI_REASONING_EFFORT": "high",
         }
         fake_cfg = dict(m.DEFAULT_CONFIG)
         fake_cfg.update({
